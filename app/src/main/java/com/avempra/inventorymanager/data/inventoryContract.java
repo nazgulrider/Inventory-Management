@@ -17,8 +17,11 @@ public class inventoryContract {
 
     public static final class inventoryEntry implements BaseColumns{
         public static final Uri CONTENT_URI=Uri.withAppendedPath(BASE_CONTENT_URI,PATH_INVENTORY);
-
-
+        public static final String TABLE_NAME="inventory";
+        public static final String COLUMN_NAME="item";
+        public static final String COLUMN_DESC="description";
+        public static final String COLUMN_COST="cost";
+        public static final String COLUMN_MSRP="msrp";
 
     }
 }
