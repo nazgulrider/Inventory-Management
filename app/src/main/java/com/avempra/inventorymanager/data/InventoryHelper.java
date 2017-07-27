@@ -24,9 +24,9 @@ public class InventoryHelper extends SQLiteOpenHelper {
         final String SQL_CREATE_INVENTORY_TABLE="CREATE TABLE "+inventoryEntry.TABLE_NAME+" (" +
                 inventoryEntry._ID+" INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 inventoryEntry.COLUMN_NAME+" TEXT NOT NULL," +
-                inventoryEntry.COLUMN_DESC+" INTEGER NOT NULL, " +
-                inventoryEntry.COLUMN_COST+" DOUBLE NOT NULL, " +
-                inventoryEntry.COLUMN_MSRP+" DOUBLE NOT NULL)";
+                inventoryEntry.COLUMN_DESC+" TEXT NOT NULL, " +
+                inventoryEntry.COLUMN_COST+" REAL NOT NULL, " +
+                inventoryEntry.COLUMN_MSRP+" REAL NOT NULL)";
         db.execSQL(SQL_CREATE_INVENTORY_TABLE);
     }
 
