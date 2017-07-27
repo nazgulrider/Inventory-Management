@@ -17,6 +17,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".DetailActivity"></activity>
+        <provider
+            android:authorities="com.avempra.inventorymanager"
+            android:name=".data.InventoryProvider"
+            android:exported="false"/>
     </application>
 
 </manifest>

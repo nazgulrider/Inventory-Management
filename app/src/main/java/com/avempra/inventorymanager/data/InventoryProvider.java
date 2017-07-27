@@ -66,7 +66,21 @@ public class InventoryProvider extends ContentProvider {
     @Nullable
     @Override
     public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
-        return null;
+        //insert returns id (datatype-long) for the item that was inserted to the database
+        long newId=0;
+        SQLiteDatabase db=mInventoryHelper.getWritableDatabase();
+        int match=sUriMatcher.match(uri);
+        switch (match){
+            case INVENTORY:
+                newId=db.insert(inventoryEntry.TABLE_NAME,null,values);
+                break;
+            default:
+                throw new IllegalArgumentException("Insertion is not supported for "+uri);
+
+        }
+        getContext().getContentResolver().notifyChange(uri,null);
+
+        return ContentUris.withAppendedId(uri,newId);
     }
 
     @Override
