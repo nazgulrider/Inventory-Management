@@ -13,7 +13,7 @@ import com.avempra.inventorymanager.data.inventoryContract.inventoryEntry;
 public class InventoryHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME="inventory.db";
-    private static final int DATABASE_VERSION=1;
+    private static final int DATABASE_VERSION=2;
 
     public InventoryHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -26,12 +26,14 @@ public class InventoryHelper extends SQLiteOpenHelper {
                 inventoryEntry.COLUMN_NAME+" TEXT NOT NULL," +
                 inventoryEntry.COLUMN_DESC+" TEXT NOT NULL, " +
                 inventoryEntry.COLUMN_COST+" REAL NOT NULL, " +
-                inventoryEntry.COLUMN_MSRP+" REAL NOT NULL)";
+                inventoryEntry.COLUMN_MSRP+" REAL NOT NULL, " +
+                inventoryEntry.COLUMN_QTY+" INTEGER NOT NULL)";
         db.execSQL(SQL_CREATE_INVENTORY_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+        db.execSQL("DROP TABLE IF EXISTS "+ inventoryEntry.TABLE_NAME);
+        onCreate(db);
     }
 }

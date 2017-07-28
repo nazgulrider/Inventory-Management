@@ -2,24 +2,40 @@ package com.avempra.inventorymanager;
 
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.TextView;
 
-import com.avempra.inventorymanager.data.InventoryHelper;
-import com.avempra.inventorymanager.data.inventoryContract;
+import com.avempra.inventorymanager.data.InventoryAdapter;
+import com.avempra.inventorymanager.data.inventoryContract.inventoryEntry;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+    private InventoryAdapter mAdapter;
+    private final int LOADER_ID=1;
+    private RecyclerView mRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mAdapter=new InventoryAdapter(this);
+        mRecyclerView=(RecyclerView)findViewById(R.id.main_rv);
+        LinearLayoutManager linearLayoutManager=new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false);
+        mRecyclerView.setLayoutManager(linearLayoutManager);
+        mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setAdapter(mAdapter);
+
+
+        getSupportLoaderManager().initLoader(LOADER_ID,null,this);
 
         FloatingActionButton fab=(FloatingActionButton)findViewById(R.id.floatingActionButton);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -29,21 +45,24 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-    }
-    public void getData(){
-        InventoryHelper inventoryHelper=new InventoryHelper(this);
-        SQLiteDatabase db=inventoryHelper.getReadableDatabase();
-        Cursor cursor=db.query(inventoryContract.inventoryEntry.TABLE_NAME,null,null,null,null,null,null);
-        cursor.moveToFirst();
-        int idIndex=cursor.getColumnIndex(inventoryContract.inventoryEntry._ID);
-        int idName=cursor.getColumnIndex(inventoryContract.inventoryEntry.COLUMN_NAME);
-        int idDesc=cursor.getColumnIndex(inventoryContract.inventoryEntry.COLUMN_DESC);
-        int idCost=cursor.getColumnIndex(inventoryContract.inventoryEntry.COLUMN_COST);
-        int idMsrp=cursor.getColumnIndex(inventoryContract.inventoryEntry.COLUMN_MSRP);
 
-        TextView mainView=(TextView)findViewById(R.id.hello_world_tv);
-        mainView.setText(cursor.getString(idIndex)+cursor.getString(idName)+cursor.getString(idDesc)+cursor.getDouble(idCost)+cursor.getDouble(idMsrp));
     }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        return new CursorLoader(this,inventoryEntry.CONTENT_URI,null,null,null,null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -53,9 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if(R.id.get_data==item.getItemId()){
-            getData();
-        }
-        return true;
+
+        return false;
     }
 }

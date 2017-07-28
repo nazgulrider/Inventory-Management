@@ -17,6 +17,7 @@ public class DetailActivity extends AppCompatActivity {
     private EditText mDesc;
     private EditText mCost;
     private EditText mMsrp;
+    private EditText mQty;
 
 
 
@@ -29,6 +30,7 @@ public class DetailActivity extends AppCompatActivity {
         mDesc=(EditText)findViewById(R.id.desc_edit_text);
         mCost=(EditText)findViewById(R.id.cost_edit_text);
         mMsrp=(EditText)findViewById(R.id.msrp_edit_text);
+        mQty=(EditText)findViewById(R.id.quantity_edit_text);
 
     }
 
@@ -45,12 +47,14 @@ public class DetailActivity extends AppCompatActivity {
             String desc=mDesc.getText().toString();
             Double cost=Double.parseDouble(mCost.getText().toString());
             Double msrp=Double.parseDouble(mMsrp.getText().toString());
+            Integer qty=Integer.parseInt(mQty.getText().toString());
 
             ContentValues cv=new ContentValues();
             cv.put(inventoryEntry.COLUMN_NAME,itemName);
             cv.put(inventoryEntry.COLUMN_DESC,desc);
             cv.put(inventoryEntry.COLUMN_COST,cost);
             cv.put(inventoryEntry.COLUMN_MSRP,msrp);
+            cv.put(inventoryEntry.COLUMN_QTY,qty);
 
             Uri resultUri=getContentResolver().insert(inventoryEntry.CONTENT_URI,cv);
             long id= Long.parseLong(resultUri.getLastPathSegment());

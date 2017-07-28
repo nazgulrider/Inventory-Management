@@ -23,6 +23,7 @@ public class inventoryContract {
         public static final String COLUMN_DESC="description";
         public static final String COLUMN_COST="cost";
         public static final String COLUMN_MSRP="msrp";
+        public static final String COLUMN_QTY="quantity";
 
     }
 }
