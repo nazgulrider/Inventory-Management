@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.avempra.inventorymanager.R;
-import com.avempra.inventorymanager.data.inventoryContract.inventoryEntry;
+import com.avempra.inventorymanager.data.InventoryContract.InventoryEntry;
 
 import static android.support.v7.widget.RecyclerView.ViewHolder;
 
@@ -21,9 +21,11 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
 
     private Cursor mCursor;
     Context mContext;
+    private OnClickHandler mOnClickHandler;
 
-    public InventoryAdapter(Context context) {
+    public InventoryAdapter(Context context,OnClickHandler onClickHandler) {
         this.mContext=context;
+        this.mOnClickHandler=onClickHandler;
     }
 
     @Override
@@ -35,9 +37,9 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
     @Override
     public void onBindViewHolder(InventoryHolder holder, int position) {
         mCursor.moveToPosition(position);
-        int itemNameIndex=mCursor.getColumnIndex(inventoryEntry.COLUMN_NAME);
-        int msrpIndex=mCursor.getColumnIndex(inventoryEntry.COLUMN_MSRP);
-        int quantityIndex=mCursor.getColumnIndex(inventoryEntry.COLUMN_QTY);
+        int itemNameIndex=mCursor.getColumnIndex(InventoryEntry.COLUMN_NAME);
+        int msrpIndex=mCursor.getColumnIndex(InventoryEntry.COLUMN_MSRP);
+        int quantityIndex=mCursor.getColumnIndex(InventoryEntry.COLUMN_QTY);
 
         holder.itemNameView.setText(mCursor.getString(itemNameIndex));
         holder.priceView.setText(mCursor.getString(msrpIndex));
@@ -59,7 +61,7 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
         notifyDataSetChanged();
     }
 
-    class InventoryHolder extends ViewHolder{
+    class InventoryHolder extends ViewHolder implements View.OnClickListener{
        // ImageView imageView;
         TextView itemNameView;
         TextView priceView;
@@ -72,7 +74,21 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
             itemNameView=(TextView)view.findViewById(R.id.item_name_tv);
             priceView=(TextView)view.findViewById(R.id.msrp_tv);
             quantityView=(TextView)view.findViewById(R.id.quantity_tv);
-
+            view.setOnClickListener(this);
         }
+
+        @Override
+        public void onClick(View v) {
+            int position=getAdapterPosition();
+            int inventoryId;
+                mCursor.moveToPosition(position);
+                int idIndex=mCursor.getColumnIndex(InventoryEntry._ID);
+                inventoryId = mCursor.getInt(idIndex);
+            mOnClickHandler.onClick(inventoryId);
+        }
+    }
+    public interface OnClickHandler{
+        void onClick(int inventoryId);
+
     }
 }

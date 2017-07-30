@@ -10,7 +10,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.avempra.inventorymanager.data.inventoryContract.inventoryEntry;
+import com.avempra.inventorymanager.data.InventoryContract.InventoryEntry;
 /**
  * Created by shres on 7/27/2017.
  */
@@ -23,8 +23,8 @@ public class InventoryProvider extends ContentProvider {
 
     private static final UriMatcher sUriMatcher=new UriMatcher(UriMatcher.NO_MATCH);
     static {
-        sUriMatcher.addURI(inventoryContract.CONTENT_AUTHORITY,inventoryContract.PATH_INVENTORY,INVENTORY);
-        sUriMatcher.addURI(inventoryContract.CONTENT_AUTHORITY,inventoryContract.PATH_INVENTORY+"/#",INVENTORY_ID);
+        sUriMatcher.addURI(InventoryContract.CONTENT_AUTHORITY, InventoryContract.PATH_INVENTORY,INVENTORY);
+        sUriMatcher.addURI(InventoryContract.CONTENT_AUTHORITY, InventoryContract.PATH_INVENTORY+"/#",INVENTORY_ID);
     }
 
     @Override
@@ -41,12 +41,12 @@ public class InventoryProvider extends ContentProvider {
         int match=sUriMatcher.match(uri);
         switch (match){
             case INVENTORY:
-                cursor=db.query(inventoryEntry.TABLE_NAME,projection,selection,selectionArgs,null,null,sortOrder);
+                cursor=db.query(InventoryEntry.TABLE_NAME,projection,selection,selectionArgs,null,null,sortOrder);
                 break;
             case INVENTORY_ID:
-                selection=inventoryEntry._ID+"=?";
+                selection= InventoryEntry._ID+"=?";
                 selectionArgs=new String[]{String.valueOf(ContentUris.parseId(uri))};
-                cursor=db.query(inventoryEntry.TABLE_NAME,projection,selection,selectionArgs,null,null,sortOrder);
+                cursor=db.query(InventoryEntry.TABLE_NAME,projection,selection,selectionArgs,null,null,sortOrder);
                 break;
             default:
                 throw new IllegalArgumentException("cannot query unknown uri "+uri);
@@ -72,7 +72,7 @@ public class InventoryProvider extends ContentProvider {
         int match=sUriMatcher.match(uri);
         switch (match){
             case INVENTORY:
-                newId=db.insert(inventoryEntry.TABLE_NAME,null,values);
+                newId=db.insert(InventoryEntry.TABLE_NAME,null,values);
                 break;
             default:
                 throw new IllegalArgumentException("Insertion is not supported for "+uri);
