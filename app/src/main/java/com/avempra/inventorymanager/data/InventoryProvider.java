@@ -85,11 +85,30 @@ public class InventoryProvider extends ContentProvider {
 
     @Override
     public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
+
         return 0;
     }
 
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
-        return 0;
+        int id;
+        SQLiteDatabase db=mInventoryHelper.getWritableDatabase();
+        int match=sUriMatcher.match(uri);
+        switch (match){
+            case INVENTORY:
+                id=db.update(InventoryEntry.TABLE_NAME,values,selection,selectionArgs);
+                break;
+            case INVENTORY_ID:
+                selection=InventoryEntry._ID+"=?";
+                selectionArgs=new String[]{String.valueOf(ContentUris.parseId(uri))};
+                id=db.update(InventoryEntry.TABLE_NAME,values,selection,selectionArgs);
+                break;
+            default:
+                throw new IllegalArgumentException("Update Failed");
+        }
+        if(id!=0){
+            getContext().getContentResolver().notifyChange(uri,null);
+        }
+        return id;
     }
 }

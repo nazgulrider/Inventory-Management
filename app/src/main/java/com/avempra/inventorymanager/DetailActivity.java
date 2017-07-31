@@ -13,6 +13,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -28,6 +30,14 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private Uri mItemUri;
     private final int LOADER_ID=2;
     private final String TAG="DetailActivity";
+    private boolean mItemHasChanged=false;
+    private View.OnTouchListener mTouchListener=new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            mItemHasChanged=true;
+            return false;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +52,12 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         mMsrp=(EditText)findViewById(R.id.msrp_edit_text);
         mQty=(EditText)findViewById(R.id.quantity_edit_text);
 
+        mName.setOnTouchListener(mTouchListener);
+        mDesc.setOnTouchListener(mTouchListener);
+        mCost.setOnTouchListener(mTouchListener);
+        mMsrp.setOnTouchListener(mTouchListener);
+        mQty.setOnTouchListener(mTouchListener);
+
         Intent intent=getIntent();
         mItemUri=intent.getData();
 
@@ -53,6 +69,18 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         }
 
+    }
+    private void showUnsavedChangesDialog(){
+        Toast.makeText(this,"Some things were Changed but not saved",Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(!mItemHasChanged){
+            super.onBackPressed();
+            return;
+        }
+        showUnsavedChangesDialog();
     }
 
     @Override
@@ -69,7 +97,10 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 finish();
                 return true;
             case android.R.id.home:
-                NavUtils.navigateUpFromSameTask(this);
+                if(!mItemHasChanged) {
+                    NavUtils.navigateUpFromSameTask(this);
+                }
+                showUnsavedChangesDialog();
                 return true;
         }
         return true;
@@ -89,13 +120,23 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         cv.put(InventoryEntry.COLUMN_MSRP,msrp);
         cv.put(InventoryEntry.COLUMN_QTY,qty);
 
-        Uri resultUri=getContentResolver().insert(InventoryEntry.CONTENT_URI,cv);
-        long id= Long.parseLong(resultUri.getLastPathSegment());
-        if(id==-1){
-            Toast.makeText(this,"Error inserting item",Toast.LENGTH_SHORT).show();
+        if(mItemUri==null){
+            Uri resultUri=getContentResolver().insert(InventoryEntry.CONTENT_URI,cv);
+            long id= Long.parseLong(resultUri.getLastPathSegment());
+            if(id==-1){
+                Toast.makeText(this,"Error inserting item",Toast.LENGTH_SHORT).show();
+            }else{
+                Toast.makeText(this,"item inserted with id "+id,Toast.LENGTH_SHORT).show();
+            }
         }else{
-            Toast.makeText(this,"item inserted with id "+id,Toast.LENGTH_SHORT).show();
+            long id=getContentResolver().update(mItemUri,cv,null,null);
+            if(id==-1){
+                Toast.makeText(this,"Error inserting item",Toast.LENGTH_SHORT).show();
+            }else{
+                Toast.makeText(this,"item updated with id "+id,Toast.LENGTH_SHORT).show();
+            }
         }
+
 
     }
 
