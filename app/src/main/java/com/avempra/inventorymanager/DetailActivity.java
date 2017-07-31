@@ -1,6 +1,7 @@
 package com.avempra.inventorymanager;
 
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -9,6 +10,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -71,7 +73,23 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     }
     private void showUnsavedChangesDialog(){
-        Toast.makeText(this,"Some things were Changed but not saved",Toast.LENGTH_SHORT).show();
+        AlertDialog.Builder builder=new AlertDialog.Builder(this);
+        builder.setMessage("Discard the changes and quit editing?")
+                .setPositiveButton("Discard", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                })
+                .setNegativeButton("Keep Editing", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if(dialog!=null)
+                            dialog.dismiss();
+                    }
+                });
+        AlertDialog alertDialog=builder.create();
+        alertDialog.show();
     }
 
     @Override
