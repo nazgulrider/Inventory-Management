@@ -24,14 +24,14 @@ import com.avempra.inventorymanager.data.InventoryContract.InventoryEntry;
 
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    private final int LOADER_ID=2;
+    private final String TAG="DetailActivity";
     private EditText mName;
     private EditText mDesc;
     private EditText mCost;
     private EditText mMsrp;
     private EditText mQty;
     private Uri mItemUri;
-    private final int LOADER_ID=2;
-    private final String TAG="DetailActivity";
     private boolean mItemHasChanged=false;
     private View.OnTouchListener mTouchListener=new View.OnTouchListener() {
         @Override
@@ -65,6 +65,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         if (mItemUri==null) {
             setTitle("Add Item");
+            invalidateOptionsMenu();
         }else{
             setTitle("Edit Item");
             getSupportLoaderManager().initLoader(LOADER_ID,null,this);
@@ -108,23 +109,72 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
-            case R.id.save_menu:
-                saveItem();
-                finish();
-                return true;
-            case android.R.id.home:
-                if(!mItemHasChanged) {
-                    NavUtils.navigateUpFromSameTask(this);
-                }
-                showUnsavedChangesDialog();
-                return true;
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        if(mItemUri==null){
+            MenuItem menuItem = menu.findItem(R.id.delete_item_menu);
+            menuItem.setVisible(false);
+
         }
         return true;
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.save_menu:
+                saveItem();
+
+                return true;
+            case R.id.delete_item_menu:
+                deleteConfirmationDialog();
+                return true;
+            case android.R.id.home:
+                if(!mItemHasChanged) {
+                    NavUtils.navigateUpFromSameTask(this);
+                }else{
+                    showUnsavedChangesDialog();
+                }
+
+                return true;
+        }
+        return true;
+    }
+    private void deleteConfirmationDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Are you sure you want to delete the item?")
+                .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        deleteItem();
+                        finish();
+                    }
+                })
+                .setNegativeButton("Abort", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if(dialog!=null){
+                            dialog.dismiss();
+                        }
+                    }
+                });
+        AlertDialog dialog=builder.create();
+        dialog.show();
+    }
+
+    private void deleteItem() {
+        if (mItemUri!=null) {
+            int numberOfRowsDeleted=getContentResolver().delete(mItemUri,null,null);
+            Toast.makeText(this,numberOfRowsDeleted+" rows deleted",Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
     private void saveItem(){
+        if(!mItemHasChanged){
+            Toast.makeText(this,"Nothing to save",Toast.LENGTH_SHORT).show();
+            return;
+        }
         String itemName=mName.getText().toString();
         String desc=mDesc.getText().toString();
         Double cost=Double.parseDouble(mCost.getText().toString());
@@ -154,9 +204,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 Toast.makeText(this,"item updated with id "+id,Toast.LENGTH_SHORT).show();
             }
         }
-
-
+        finish();
     }
+
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {

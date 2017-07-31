@@ -11,6 +11,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.avempra.inventorymanager.data.InventoryContract.InventoryEntry;
+
 /**
  * Created by shres on 7/27/2017.
  */
@@ -85,8 +86,25 @@ public class InventoryProvider extends ContentProvider {
 
     @Override
     public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
-
-        return 0;
+        int numberOfRowsDeleted;
+        SQLiteDatabase db=mInventoryHelper.getWritableDatabase();
+        int match=sUriMatcher.match(uri);
+        switch (match){
+            case INVENTORY:
+                numberOfRowsDeleted=db.delete(InventoryEntry.TABLE_NAME,selection,selectionArgs);
+                break;
+            case INVENTORY_ID:
+                selection=InventoryEntry._ID+"=?";
+                selectionArgs=new String[]{String.valueOf(ContentUris.parseId(uri))};
+                numberOfRowsDeleted=db.delete(InventoryEntry.TABLE_NAME,selection,selectionArgs);
+                break;
+            default:
+                throw new IllegalArgumentException("Update Failed");
+        }
+        if(numberOfRowsDeleted!=0){
+            getContext().getContentResolver().notifyChange(uri,null);
+        }
+        return numberOfRowsDeleted;
     }
 
     @Override

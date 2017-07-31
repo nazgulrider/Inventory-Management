@@ -1,6 +1,7 @@
 package com.avempra.inventorymanager;
 
 import android.content.ContentUris;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -9,6 +10,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -16,6 +18,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.avempra.inventorymanager.data.InventoryAdapter;
 import com.avempra.inventorymanager.data.InventoryContract.InventoryEntry;
@@ -75,10 +78,46 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         return true;
     }
 
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        int itemId=item.getItemId();
+        switch (itemId){
+            case R.id.delete_all_menu:
+                showDeleteConfirmationDialog();
+                return true;
+            case R.id.get_data:
+                Toast.makeText(this,"HA HA HA",Toast.LENGTH_SHORT).show();
+                return true;
+        }
+        return true;
+    }
 
-        return false;
+    private void showDeleteConfirmationDialog() {
+        AlertDialog.Builder builder =new AlertDialog.Builder(this);
+        builder.setMessage("Are you out of your mind???")
+                .setPositiveButton("Watch it bro!!", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        deleteAll();
+                    }
+                })
+                .setNegativeButton("Let me re-think this..", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if(dialog!=null){
+                            dialog.dismiss();
+                        }
+                    }
+                });
+        AlertDialog dialog=builder.create();
+        dialog.show();
+
+    }
+
+    private void deleteAll() {
+        int numberOfRowsDeleted=getContentResolver().delete(InventoryEntry.CONTENT_URI,null,null);
+        Toast.makeText(this,numberOfRowsDeleted+" rows deleted..hope you're happy..", Toast.LENGTH_SHORT).show();
     }
 
     @Override
