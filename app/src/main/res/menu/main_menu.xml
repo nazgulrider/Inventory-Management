@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/get_data"
-        android:title="get data"
+        android:title="Cart"
+        android:icon="@drawable/ic_shopping_cart_black_24dp"
         app:showAsAction="always"/>
     <item
         android:id="@+id/delete_all_menu"

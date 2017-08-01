@@ -4,28 +4,40 @@ import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.CursorLoader;
+import android.support.v4.content.FileProvider;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.avempra.inventorymanager.data.InventoryContract.InventoryEntry;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private final int LOADER_ID=2;
+    private static final int REQUEST_IMAGE_CAPTURE=1;
     private final String TAG="DetailActivity";
+    private ImageView mItemImageView;
     private EditText mName;
     private EditText mDesc;
     private EditText mCost;
@@ -33,6 +45,14 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private EditText mQty;
     private Uri mItemUri;
     private boolean mItemHasChanged=false;
+    String mCurrentPhotoPath;
+
+    private View.OnClickListener mClickListener=new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            dispatchTakePictureIntent(v);
+        }
+    };
     private View.OnTouchListener mTouchListener=new View.OnTouchListener() {
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -46,8 +66,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        Log.e(TAG, "onCreate: called" );
-
+        mItemImageView=(ImageView)findViewById(R.id.image_item_iv);
         mName=(EditText)findViewById(R.id.item_name_edit_text);
         mDesc=(EditText)findViewById(R.id.desc_edit_text);
         mCost=(EditText)findViewById(R.id.cost_edit_text);
@@ -59,6 +78,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         mCost.setOnTouchListener(mTouchListener);
         mMsrp.setOnTouchListener(mTouchListener);
         mQty.setOnTouchListener(mTouchListener);
+        mItemImageView.setOnClickListener(mClickListener);
 
         Intent intent=getIntent();
         mItemUri=intent.getData();
@@ -73,6 +93,76 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         }
 
     }
+
+
+    private File createImageFile() throws IOException{
+        //Create an image file name
+        String timeStamp=new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName="JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,
+                ".jpg",
+                storageDir
+        );
+
+        //Save a file: path for use with ACTION_VIEW intents
+        mCurrentPhotoPath = image.getAbsolutePath();
+        return image;
+    }
+    private void dispatchTakePictureIntent(View view) {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            //Continue only if the File was successfully created
+            if (photoFile != null) {
+                Uri photoUri= FileProvider.getUriForFile(this,
+                        "com.avempra.inventorymanager.fileprovider",
+                        photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            }
+        }
+    }
+    private void setPic() {
+        // Get the dimensions of the View
+        int targetW = mItemImageView.getWidth();
+        int targetH = mItemImageView.getHeight();
+
+        // Get the dimensions of the bitmap
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+        int photoW = bmOptions.outWidth;
+        int photoH = bmOptions.outHeight;
+
+        // Determine how much to scale down the image
+        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
+
+        // Decode the image file into a Bitmap sized to fill the View
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inSampleSize = scaleFactor;
+
+        Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+        mItemImageView.setImageBitmap(bitmap);
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK){
+            /*Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            mItemImageView.setImageBitmap(imageBitmap);*/
+            setPic();
+        }
+    }
+
     private void showUnsavedChangesDialog(){
         AlertDialog.Builder builder=new AlertDialog.Builder(this);
         builder.setMessage("Discard the changes and quit editing?")
@@ -175,11 +265,25 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             Toast.makeText(this,"Nothing to save",Toast.LENGTH_SHORT).show();
             return;
         }
+        boolean nameIsEmpty=mName.getText().toString().isEmpty();
+        boolean descIsEmpty=mDesc.getText().toString().isEmpty();
+        boolean costIsEmpty=mCost.getText().toString().isEmpty();
+        boolean msrpIsEmpty=mMsrp.getText().toString().isEmpty();
+        boolean qtyIsEmpty=mQty.getText().toString().isEmpty();
+        if(nameIsEmpty
+                | descIsEmpty
+                | costIsEmpty
+                | msrpIsEmpty
+                | qtyIsEmpty){
+            Toast.makeText(this,"Some fields are empty",Toast.LENGTH_SHORT).show();
+            return;
+        }
         String itemName=mName.getText().toString();
         String desc=mDesc.getText().toString();
         Double cost=Double.parseDouble(mCost.getText().toString());
         Double msrp=Double.parseDouble(mMsrp.getText().toString());
         Integer qty=Integer.parseInt(mQty.getText().toString());
+
 
         ContentValues cv=new ContentValues();
         cv.put(InventoryEntry.COLUMN_NAME,itemName);
