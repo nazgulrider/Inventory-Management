@@ -6,10 +6,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.avempra.inventorymanager.R;
 import com.avempra.inventorymanager.data.InventoryContract.InventoryEntry;
+import com.bumptech.glide.Glide;
 
 import static android.support.v7.widget.RecyclerView.ViewHolder;
 
@@ -22,6 +24,7 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
     private Cursor mCursor;
     Context mContext;
     private OnClickHandler mOnClickHandler;
+
 
     public InventoryAdapter(Context context,OnClickHandler onClickHandler) {
         this.mContext=context;
@@ -40,6 +43,16 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
         int itemNameIndex=mCursor.getColumnIndex(InventoryEntry.COLUMN_NAME);
         int msrpIndex=mCursor.getColumnIndex(InventoryEntry.COLUMN_MSRP);
         int quantityIndex=mCursor.getColumnIndex(InventoryEntry.COLUMN_QTY);
+        int imgLinkIndex=mCursor.getColumnIndex(InventoryEntry.COLUMN_IMGLNK);
+        String path=mCursor.getString(imgLinkIndex);
+        if (path!=null) {
+            Glide.with(mContext)
+                    .load(path)
+                    .into(holder.thumbnailView);
+        } else {
+            Glide.with(mContext).clear(holder.thumbnailView);
+            holder.thumbnailView.setImageDrawable(null);
+        }
 
         holder.itemNameView.setText(mCursor.getString(itemNameIndex));
         holder.priceView.setText(mCursor.getString(msrpIndex));
@@ -66,14 +79,16 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
         TextView itemNameView;
         TextView priceView;
         TextView quantityView;
+        ImageView thumbnailView;
 
 
         public InventoryHolder(View view) {
             super(view);
-           // imageView=(ImageView) view.findViewById(R.id.item_iv);
             itemNameView=(TextView)view.findViewById(R.id.item_name_tv);
             priceView=(TextView)view.findViewById(R.id.msrp_tv);
             quantityView=(TextView)view.findViewById(R.id.quantity_tv);
+            thumbnailView=(ImageView)view.findViewById(R.id.item_iv);
+
             view.setOnClickListener(this);
         }
 

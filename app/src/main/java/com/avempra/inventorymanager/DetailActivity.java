@@ -4,8 +4,6 @@ import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -26,6 +24,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.avempra.inventorymanager.data.InventoryContract.InventoryEntry;
+import com.bumptech.glide.Glide;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,8 +43,12 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private EditText mMsrp;
     private EditText mQty;
     private Uri mItemUri;
-    private boolean mItemHasChanged=false;
+   /* private Bitmap mThumbnailBitmap ;
+    private byte[] mThumbnailByteArray;*/
     String mCurrentPhotoPath;
+
+    private boolean mItemHasChanged=false;
+
 
     private View.OnClickListener mClickListener=new View.OnClickListener() {
         @Override
@@ -130,35 +133,16 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         }
     }
     private void setPic() {
-        // Get the dimensions of the View
-        int targetW = mItemImageView.getWidth();
-        int targetH = mItemImageView.getHeight();
-
-        // Get the dimensions of the bitmap
-        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-        bmOptions.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
-        int photoW = bmOptions.outWidth;
-        int photoH = bmOptions.outHeight;
-
-        // Determine how much to scale down the image
-        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
-
-        // Decode the image file into a Bitmap sized to fill the View
-        bmOptions.inJustDecodeBounds = false;
-        bmOptions.inSampleSize = scaleFactor;
-
-        Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
-        mItemImageView.setImageBitmap(bitmap);
+        Glide.with(this)
+                .load(mCurrentPhotoPath)
+                .into(mItemImageView);
     }
 
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK){
-            /*Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            mItemImageView.setImageBitmap(imageBitmap);*/
+
             setPic();
         }
     }
@@ -274,8 +258,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 | descIsEmpty
                 | costIsEmpty
                 | msrpIsEmpty
-                | qtyIsEmpty){
-            Toast.makeText(this,"Some fields are empty",Toast.LENGTH_SHORT).show();
+                | qtyIsEmpty
+                | mCurrentPhotoPath.isEmpty()){
+            Toast.makeText(this,"Some fields are empty or you forgot to take a picture",Toast.LENGTH_SHORT).show();
             return;
         }
         String itemName=mName.getText().toString();
@@ -291,6 +276,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         cv.put(InventoryEntry.COLUMN_COST,cost);
         cv.put(InventoryEntry.COLUMN_MSRP,msrp);
         cv.put(InventoryEntry.COLUMN_QTY,qty);
+        cv.put(InventoryEntry.COLUMN_IMGLNK, mCurrentPhotoPath);
+
 
         if(mItemUri==null){
             Uri resultUri=getContentResolver().insert(InventoryEntry.CONTENT_URI,cv);
@@ -329,12 +316,15 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             int costIndex=cursor.getColumnIndex(InventoryEntry.COLUMN_COST);
             int msrpIndex=cursor.getColumnIndex(InventoryEntry.COLUMN_MSRP);
             int qtyIndex=cursor.getColumnIndex(InventoryEntry.COLUMN_QTY);
+            int imgLinkIndex=cursor.getColumnIndex(InventoryEntry.COLUMN_IMGLNK);
 
             mName.setText(cursor.getString(nameIndex));
             mDesc.setText(cursor.getString(descIndex));
             mCost.setText(String.valueOf(cursor.getDouble(costIndex)));
             mMsrp.setText(String.valueOf(cursor.getDouble(msrpIndex)));
             mQty.setText(String.valueOf(cursor.getInt(qtyIndex)));
+            mCurrentPhotoPath=cursor.getString(imgLinkIndex);
+            setPic();
 
 
 

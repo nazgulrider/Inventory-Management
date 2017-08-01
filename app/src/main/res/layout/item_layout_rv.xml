@@ -19,7 +19,8 @@
             <ImageView
                 android:id="@+id/item_iv"
                 android:layout_width="112dp"
-                android:layout_height="match_parent" />
+                android:scaleType="centerCrop"
+                android:layout_height="112dp" />
             <TextView
                 android:id="@+id/item_name_tv"
                 android:layout_width="wrap_content"
